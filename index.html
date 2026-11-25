@@ -41,7 +41,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{min-height:100%;margin:0}
+html,body{min-height:100%;margin:0;overflow-x:hidden;overflow-x:clip;overscroll-behavior-x:none;touch-action:pan-y pinch-zoom}
 body{
   background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;
   -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;
@@ -741,10 +741,6 @@ function settingsSheet(s){
           <button class="chip-btn" data-a="restore" data-id="${h.id}">Restore</button>
           <button class="chip-btn warn" data-a="del-arch" data-id="${h.id}">${s.confirm === h.id ? "Confirm" : "Delete"}</button></div>`).join("")
         : `<p class="hint" style="margin:0">Archived habits keep their history and appear here.</p>`}
-      <div class="section-head" style="margin:6px 0 0"><h2>Prototype</h2></div>
-      <button class="list-btn" data-a="demo"><span>Load sample data<small>Replaces current data with 5 habits and 10 weeks of history</small></span>${I.right}</button>
-      <button class="list-btn warn" data-a="wipe"><span>${s.confirm === "wipe" ? "Tap again to erase everything" : "Erase all data"}</span>${I.right}</button>
-      <p class="footnote">Data is stored on this device only. Days end at midnight Eastern.</p>
     </div>`;
 }
 
@@ -832,11 +828,7 @@ const A = {
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   },
   import: () => document.getElementById("importFile").click(),
-  demo: () => { S = demoData(); save(); UI.sheet ? closeSheet() : render(); snack("Sample data loaded"); },
-  wipe: () => {
-    if (UI.sheet.confirm !== "wipe") { UI.sheet.confirm = "wipe"; renderSheet(); return; }
-    S = { v: 1, habits: [], log: {} }; save(); closeSheet(); snack("All data erased");
-  }
+  demo: () => { S = demoData(); save(); UI.sheet ? closeSheet() : render(); snack("Sample data loaded"); }
 };
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-a]"); if (!el) return;

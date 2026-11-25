@@ -15,6 +15,4 @@ A daily habit tracker built for iPhone, styled with Art Deco touches and the Str
 - Works offline after the first visit, and installs to the Home Screen with its own icon.
 - Data is saved on the device. Export/Import in Settings handles backups.
 
-Sample data and Erase all in Settings are there for testing and will be removed later.
-
 When you change index.html, bump `CACHE` in sw.js so installed copies pick up the update.
