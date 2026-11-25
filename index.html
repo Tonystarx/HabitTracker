@@ -315,6 +315,18 @@ svg{display:block}
 .snack{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);transform:translateX(-50%);z-index:55;background:var(--raised);color:var(--ink);padding:10px 16px;border-radius:12px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.35);animation:fade .2s}
 .haptic-src{position:fixed;left:-100px;top:-100px;opacity:0;pointer-events:none}
 
+
+/* Art Deco cloud and tide motif on habit cards */
+.hcard-in{overflow:hidden}
+.hcard-in>.card-main,.hcard-in>.check-wrap,.hcard-in>.handle{position:relative;z-index:1}
+.motif{position:absolute;pointer-events:none;z-index:0;fill:none;stroke:var(--raised);stroke-width:1.4;stroke-linecap:round}
+.motif .lobe{fill:var(--surface)}
+.hcard.done .motif{stroke:color-mix(in srgb,var(--accent) 55%,var(--raised))}
+.hcard.done .motif .lobe{fill:color-mix(in srgb,var(--accent) 4%,var(--surface))}
+.hcard.rest .motif{stroke:color-mix(in srgb,var(--teal) 40%,var(--raised))}
+.motif.cloud{width:104px;right:66px;bottom:19px;transform:translateX(var(--cx,0px));will-change:transform}
+.motif.waves{left:0;right:0;bottom:0;height:18px;width:100%;opacity:.85}
+.hcard.done .motif.waves{stroke:color-mix(in srgb,var(--coral) 60%,var(--raised))}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -445,6 +457,17 @@ const I = {
   tStats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20.5h16"/><path d="M6.5 17v-5M11 17V6M15.5 17v-8M20 17v-3" stroke-width="2.6" stroke-linecap="round"/></svg>'
 };
 
+const CLOUD = (() => {
+  const base = 46; let p = "";
+  for (const [cx, r] of [[58, 24], [30, 16], [90, 18]]) {
+    p += `<path class="lobe" d="M${cx-r} ${base} A${r} ${r} 0 0 1 ${cx+r} ${base}Z"/>`;
+    for (let rr = r; rr > 0; rr -= 6) p += `<path d="M${cx-rr} ${base} A${rr} ${rr} 0 0 1 ${cx+rr} ${base}"/>`;
+  }
+  p += `<path d="M4 ${base}H116M18 ${base+6}H104M34 ${base+12}H88"/>`;
+  return `<svg class="motif cloud" viewBox="0 0 120 60" aria-hidden="true">${p}</svg>`;
+})();
+const waves = id => `<svg class="motif waves" aria-hidden="true"><defs><pattern id="wv-${id}" width="40" height="18" patternUnits="userSpaceOnUse"><path d="M0 5Q10 -1 20 5T40 5M0 10Q10 4 20 10T40 10M0 15Q10 9 20 15T40 15"/></pattern></defs><rect width="100%" height="100%" fill="url(#wv-${id})" stroke="none"/></svg>`;
+
 function sunburst(){
   let rays = "";
   const n = 22;
@@ -482,6 +505,7 @@ function render(){
     </header>
     ${UI.tab === "today" ? viewToday() : UI.tab === "calendar" ? viewCalendar() : viewStats()}`;
   renderTabs();
+  parallax();
   if (UI.pop) {
     const w = app.querySelector(`.hcard[data-id="${UI.pop}"]`);
     if (w) { w.querySelector(".check").classList.add("pop"); w.querySelector(".burst").classList.add("go"); }
@@ -532,7 +556,7 @@ function card(h){
     : `<div class="check-wrap"><span class="burst">${rays}</span>
          <button class="check ${s === 1 ? "on" : s === 2 ? "restc" : ""}" data-a="toggle" data-id="${h.id}" role="checkbox" aria-checked="${s === 1}" aria-label="Mark ${esc(h.name)} complete">${s === 2 ? I.dash : I.check}</button></div>`;
   return `<div class="hcard ${s === 1 ? "done" : s === 2 ? "rest" : ""}" data-id="${h.id}">
-    <div class="hcard-in">
+    <div class="hcard-in">${CLOUD}${waves(h.id)}
       <button class="card-main" data-a="open-habit" data-id="${h.id}"><div class="card-title">${esc(h.name)}</div>${meta}</button>
       ${right}
     </div></div>`;
@@ -919,6 +943,23 @@ function demoData(){
   for (let d = addDays(start, 2); d < addDays(T, -20); d = addDays(d, 1)) if (rnd() < .65) log.demo5[d] = 1;
   return { v: 1, habits, log };
 }
+
+/* ===================== Cloud drift on scroll ===================== */
+const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
+let parRaf = 0;
+function parallax(){
+  parRaf = 0;
+  if (calm.matches) return;
+  const half = window.innerHeight / 2;
+  for (const c of app.querySelectorAll(".hcard")) {
+    const r = c.getBoundingClientRect();
+    const d = Math.max(-1, Math.min(1, (r.top + r.height / 2 - half) / half));
+    c.style.setProperty("--cx", (d * 18).toFixed(1) + "px");
+  }
+}
+const queueParallax = () => { if (!parRaf) parRaf = requestAnimationFrame(parallax); };
+window.addEventListener("scroll", queueParallax, { passive: true });
+window.addEventListener("resize", queueParallax);
 
 /* ===================== Day rollover & boot ===================== */
 function checkDay(){ const k = todayKey(); if (k !== T) { T = k; UI.week = weekStartOf(T); UI.month = T.slice(0,7); render(); if (UI.sheet) renderSheet(); } }
