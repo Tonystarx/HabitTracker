@@ -529,10 +529,10 @@ function viewToday(){
       <button class="text-btn" data-a="demo">Load sample data to explore</button>
     </div>`;
   const ds = dayStat(T);
-  const segs = hs.map((h, i) => {
-    const s = st(h, T);
-    return `<i class="${s === 1 ? "on" : s === 2 ? "rest" : ""}" style="--segw:${hs.length * 100}%;--segx:${hs.length > 1 ? (i / (hs.length - 1) * 100).toFixed(1) : 0}%"></i>`;
-  }).join("");
+  // Fill left to right: completed first, then rest days, then what's left
+  const states = hs.map(h => st(h, T)).sort((a, b) => (a === 1 ? 0 : a === 2 ? 1 : 2) - (b === 1 ? 0 : b === 2 ? 1 : 2));
+  const segs = states.map((s, i) =>
+    `<i class="${s === 1 ? "on" : s === 2 ? "rest" : ""}" style="--segw:${hs.length * 100}%;--segx:${hs.length > 1 ? (i / (hs.length - 1) * 100).toFixed(1) : 0}%"></i>`).join("");
   const label = ds.total && ds.done === ds.total ? "Perfect day" : `${ds.done} of ${ds.total} done`;
   const sub = ds.rest ? `${ds.rest} resting` : ds.total - ds.done > 0 ? `${ds.total - ds.done} to go` : "All complete";
   return `
